@@ -95,6 +95,46 @@ class Enrollment(models.Model):
     rating = models.FloatField(default=5.0)
 
 
+
+# Question Model
+class Question(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)  # One-To-Many relationship with Course model
+    question_text = models.TextField()  # Question content
+    grade = models.IntegerField()  # Grade point for the question
+
+    def __str__(self):
+        return self.question_text
+
+    def is_get_score(self, selected_ids):
+        all_answers = self.choice_set.filter(is_correct=True).count()
+        selected_correct = self.choice_set.filter(is_correct=True, id__in=selected_ids).count()
+        if all_answers == selected_correct:
+            return True
+        else:
+            return False
+
+
+# Choice Model
+class Choice(models.Model):
+    question = models.ForeignKey(Question, related_name='choices', on_delete=models.CASCADE)  # One-To-Many relationship with Question model
+    choice_text = models.TextField()  # Choice content
+    is_correct = models.BooleanField(default=False)  # Indicate if this choice of the question is a correct one or not
+
+    def __str__(self):
+        return self.choice_text
+
+
+# Uncommenting Submission model
+class Submission(models.Model):
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)  # One-To-Many relationship with Enrollment model
+    choices = models.ManyToManyField(Choice)  # Many-To-Many relationship with Choice model
+    submitted_at = models.DateTimeField(auto_now_add=True)  # Track when the submission was made
+
+    def __str__(self):
+        return f'Submission by {self.enrollment.user.username} for {self.enrollment.course.name}'
+
+
+
 # <HINT> Create a Question Model with:
     # Used to persist question content for a course
     # Has a One-To-Many (or Many-To-Many if you want to reuse questions) relationship with course
